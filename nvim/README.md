@@ -348,6 +348,18 @@ Xcode or a Swift toolchain.
 > `.xcodeproj`, which makes the warning point at exactly where
 > `xcode-build-server config` needs to run.
 
+> **⚠ Within that search, `buildServer.json` beats `Package.swift` at any depth —
+> nearest-wins is wrong.** A repo can have an Xcode BSP at the root *and* a nested
+> SwiftPM package that Xcode builds as part of the app. If the nested
+> `Package.swift` wins, that package attaches in SwiftPM mode, and an iOS-only
+> package yields no host compile flags — hover and go-to-definition return `nil`
+> **with no warning at all**, because finding `Package.swift` counts as
+> "configured". (Measured 2026-08-14: 92% of one repo's Swift files were silently
+> dead this way; pointing the same file's root at `buildServer.json` produced hover
+> in 6s.) The reverse never happens: a genuine multi-package monorepo has no
+> `buildServer.json` anywhere, so each package still attaches to its own
+> `Package.swift`.
+
 Xcode projects need their BSP configured once before imports resolve (SwiftPM does
 not):
 
@@ -356,6 +368,61 @@ brew install xcode-build-server
 cd <project root>          # where the .xcworkspace is = where the warning points
 xcode-build-server config -workspace <name>.xcworkspace -scheme <scheme>
 ```
+
+#### The build server reads `rootUri`, never the working directory
+
+`xcode-build-server` takes everything from the BSP `build/initialize` request
+(`server.py`, `build_initialize`):
+
+```python
+root_path  = uri2filepath(rootUri)                       # = the LSP root_dir
+cache_path = ~/Library/Caches/xcode-build-server/<root_path with "/" → "-">
+config_path = root_path/buildServer.json
+```
+
+Three consequences, all load-bearing:
+
+- **`cmd_cwd` is pointless here, so this config does not set it.** An earlier
+  version pinned it to the project root on the theory that the flag cache was keyed
+  by "the directory the editor opened". It is not. (Measured 2026-08-14: launching
+  nvim from one checkout and opening a file in another still hovered in 2s.) It was
+  also a single value computed once at config load, so in a session spanning two
+  checkouts it was wrong for most clients anyway.
+- **`buildServer.json` must sit in `root_dir` itself.** An ancestor copy is never
+  read — which is the other half of why the BSP has to win the root search above.
+- **Per-checkout caches never collide**, since the key is the root path.
+
+`sourcekit.lua` also reads `buildServer.json` on attach and raises an error if its
+`workspace` field points outside the root. That catches a worktree created by
+copying the file in: it exists, so the "missing" warning stays silent, while every
+absolute path inside it still names the original checkout.
+
+#### Worktrees: seeded flags, and putting the jumps back
+
+Running a full `make lsp`-style setup per worktree costs an Xcode build (tens of
+minutes) and gigabytes of DerivedData each — untenable if you keep ten of them.
+Compile flags differ between checkouts **only by path**, so a repo-side script can
+transplant the main checkout's flag cache instead (measured 2026-08-14: 80s for
+`xcode-build-server config` plus seconds to rewrite → hover in 2–5s, zero builds).
+
+The transplant leaves `seed-source` in the destination's cache directory naming the
+checkout it came from. When that marker is present, `sourcekit.lua` wraps the
+client's `request` and rewrites location results that land in the source checkout
+back onto the same relative path here, when that file exists.
+
+> **⚠ Why this is needed at all:** intra-module jumps already resolve correctly
+> (the transplant rewrites each module's source list), but cross-module symbols are
+> resolved through the *source* checkout's `.swiftmodule` and index store, so they
+> return its paths. Without the remap you edit the wrong checkout believing you are
+> in your worktree — silently. (Measured: intra-module `DeviceCapacityChecker` → the
+> worktree; cross-module `KMServerConfig` → the main checkout.) A file that exists
+> only in the source checkout is left alone, with a one-time warning.
+
+> **⚠ Hook `client.request`, not `handlers`.** `vim.lsp.buf.definition` never
+> consults the `handlers` table — `get_locations` in `runtime/lua/vim/lsp/buf.lua`
+> passes its own callback to `buf_request_all`, so a `handlers` entry is silently
+> ignored (measured: the remap never fired). Wrapping the client's `request` covers
+> `buf.definition`, `request_sync`, and picker plugins in one place.
 
 ### Do not delete `.stylua.toml`
 
