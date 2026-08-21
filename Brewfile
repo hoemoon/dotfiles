@@ -14,6 +14,7 @@ brew "python"
 # ~/.zsh/plugins 로 클론한다 — brew 로 설치하지 않는다.
 brew "antidote"  # 플러그인 관리 (zsh/zsh_plugins.txt)
 brew "gh"        # zshrc 가 HOMEBREW_GITHUB_API_TOKEN 을 여기서 얻는다(없으면 빈 값)
+brew "zoxide"    # 디렉터리 점프(z · zi). rupa/z 를 대체 — 그쪽은 2023-12 릴리스가 마지막
 
 # ── 에디터 ─────────────────────────────────────────────
 brew "neovim" # 0.12+ 필수 (vim.pack · autocomplete · treesitter 동봉 파서)
