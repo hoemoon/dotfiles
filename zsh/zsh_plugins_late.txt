@@ -1,0 +1,13 @@
+# compinit **후에**, 그리고 rc.zsh 의 맨 끝에서 로드된다. 순서가 곧 규약이다.
+#
+#   compinit  →  fzf-tab  →  autosuggestions  →  syntax-highlighting
+#
+# fzf-tab 은 compinit 이 만든 완성 시스템을 가로채므로 그 뒤여야 하고,
+# 뒤의 둘은 ZLE 위젯을 감싸므로 감쌀 대상(fzf 의 Ctrl-R/Ctrl-T 위젯,
+# rc.zsh 의 up-line-or-beginning-search 바인딩)이 다 만들어진 뒤여야 한다.
+# 그래서 이 번들은 rc.zsh 최하단에서 로드한다.
+#
+# syntax-highlighting 은 반드시 마지막이다(업스트림 요구사항).
+Aloxaf/fzf-tab
+zsh-users/zsh-autosuggestions
+zsh-users/zsh-syntax-highlighting

@@ -14,6 +14,10 @@ if [[ -r $_antidote ]]; then
   source $_antidote
   # 번들 목록은 저장소 파일을 직접 가리킨다 — ~/.zsh_plugins.txt 심링크가
   # 필요 없다. 생성물(정적 번들)은 기기별 경로를 담으므로 홈에 둔다.
+  #
+  # ★ 번들이 둘로 쪼개져 있다. 여기는 compinit **전**에 와야 하는 것만
+  #   (fpath 만 건드리는 zsh-completions). 위젯을 감싸는 플러그인과 fzf-tab 은
+  #   zsh_plugins_late.txt 이고 이 파일 맨 아래에서 로드한다.
   antidote load ${DOTFILES:-$HOME/dotfiles}/zsh/zsh_plugins.txt \
                 ${ZDOTDIR:-$HOME}/.zsh_plugins.zsh
 fi
@@ -36,9 +40,15 @@ else
 fi
 
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # 대소문자 무시
-zstyle ':completion:*' menu select                           # 화살표로 선택
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path ~/.cache/zsh/zcompcache
+
+# ⚠ `menu select` 가 아니라 `menu no` 다. fzf-tab 이 모호한 접두어를 가로채려면
+#   zsh 의 기본 완성 메뉴가 뜨면 안 된다(업스트림 요구사항). fzf-tab 을 빼면
+#   이 줄을 `menu select` 로 되돌려야 화살표 선택이 살아난다.
+zstyle ':completion:*' menu no
+# 그룹 헤더. fzf-tab 이 이 형식을 읽어 후보를 묶어 보여준다.
+zstyle ':completion:*:descriptions' format '[%d]'
 
 # ── history ─────────────────────────────────────────────────────────
 # /etc/zshrc 기본값(2000/1000)은 SAVEHIST < HISTSIZE 라 종료 시 절반이 버려진다.
@@ -167,3 +177,25 @@ zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 bindkey '^[[A' up-line-or-beginning-search
 bindkey '^[[B' down-line-or-beginning-search
+
+# ── 위젯을 감싸는 플러그인 (반드시 맨 끝) ───────────────────────────
+# 순서가 곧 규약이다:
+#   compinit → fzf-tab → autosuggestions → syntax-highlighting
+#
+# fzf-tab 은 compinit 이 만든 완성 시스템을 가로채므로 그 뒤여야 한다.
+# 뒤의 둘은 ZLE 위젯을 감싸므로, 감쌀 대상이 전부 만들어진 뒤여야 한다 —
+# 위 fzf 블록의 Ctrl-R/Ctrl-T 위젯과 아래 키 바인딩까지 포함해서.
+# 그래서 이 로드가 파일의 마지막이다. syntax-highlighting 이 맨 끝인 것도
+# 업스트림 요구사항이다.
+#
+# 예전에는 셋 다 파일 맨 위 한 번의 antidote load 로 들어갔다. compinit 보다
+# 먼저였고 fzf 위젯보다도 먼저였다 — 권장 순서를 어긴 상태였고, 그대로
+# fzf-tab 을 번들에 한 줄 추가했다면 *조용히* 동작하지 않았을 것이다.
+if (( $+functions[antidote] )); then
+  antidote load ${DOTFILES:-$HOME/dotfiles}/zsh/zsh_plugins_late.txt \
+                ${ZDOTDIR:-$HOME}/.zsh_plugins_late.zsh
+fi
+
+# fzf-tab 미리보기. eza 가 없으면 미리보기 창만 비고 완성 자체는 동작한다.
+(( $+commands[eza] )) && \
+  zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always --icons=always $realpath'

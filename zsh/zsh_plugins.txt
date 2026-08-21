@@ -1,3 +1,3 @@
-zsh-users/zsh-autosuggestions
+# compinit **전에** 로드되는 것만. fpath 만 건드리는 플러그인이 여기 온다.
+# 위젯을 감싸는 플러그인은 zsh_plugins_late.txt 로 — 이유는 그 파일 주석 참고.
 zsh-users/zsh-completions
-zsh-users/zsh-syntax-highlighting
