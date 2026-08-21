@@ -38,6 +38,19 @@ brew "eza" # zshrc 의 ls/ll/la/lt/tree — 없으면 별칭을 건너뛴다(ls 
 # diff·log 출력이 깨진다 — 셸 별칭과 달리 폴백이 없으니 반드시 설치.
 brew "git-delta"
 
+# ── Swift / ObjC ──────────────────────────────────────
+# nvim/lsp/sourcekit.lua 가 buildServer.json 을 요구한다(Xcode 프로젝트에서
+# sourcekit-lsp 가 인덱스를 찾는 유일한 경로). 이 툴이 그 파일을 만든다 —
+# 없으면 LSP 가 붙긴 하나 "run xcode-build-server config" 경고만 낸다.
+# sourcekit-lsp·swift-format 자체는 Xcode 툴체인 번들이라 설치할 게 없다.
+brew "xcode-build-server"
+
+# ── 터미널 멀티플렉서 ─────────────────────────────────
+# 설정이 깨지진 않지만, zsh/rc.zsh:81-83 이 Ghostty 셸 통합을 다시 source
+# 하는 이유가 바로 이것이다 — Ghostty 는 직접 띄운 셸에만 주입해서 zellij
+# 팬 안에서는 프롬프트 마킹과 작업 디렉터리 상속이 죽는다.
+brew "zellij"
+
 # ── macOS 전용 ────────────────────────────────────────
 # 한글로 쓰다 <Esc> 를 눌러도 입력기가 한글에 남는 문제를 푼다.
 # 없으면 nvim 설정이 조용히 비활성화되므로 Linux 에서도 안 깨진다.
