@@ -76,17 +76,18 @@ alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 #   전체의 git 상태를 계산하기 때문이고, 프롬프트에서 starship 을 걷어낸 것과
 #   원인이 같다. 변경 여부는 nvim 의 gitsigns 와 lazygit 이 이미 보여준다.
 #
-# --icons 는 반드시 =auto 로 쓴다. 인자 없는 --icons 는 always 와 같아서
-# `ls | grep` 이나 스크립트로 글리프가 그대로 새어나간다. auto 는 tty 가
-# 아니면 자동으로 끈다. 폰트는 Brewfile 의 nerd font cask 가 보장한다.
+# --icons 는 붙이지 않는다. 폰트(Brewfile 의 nerd font cask)도 비용도
+# 문제가 아니었고 — 측정 노이즈 안이다 — 그냥 목록이 시끄러워서 뺐다.
+# 다시 넣는다면 반드시 `--icons=auto` 로. 인자 없는 `--icons` 는 always 와
+# 같아서 `ls | grep` 이나 스크립트로 글리프가 그대로 새어나간다.
 #
 # lt·tree 별칭은 두지 않는다. lt 는 --sort=modified 가 ls -lt 와 정렬 방향이
 # 반대였고, tree 는 --level=2 로 조용히 잘려서 "하위에 없다"로 오독된다.
 # 둘 다 진짜 이름을 가리면서 동작만 다른 쪽이라 없는 편이 낫다.
 if (( $+commands[eza] )); then
-  alias ls='eza --group-directories-first --icons=auto'
-  alias ll='eza -l  --group-directories-first --icons=auto --time-style=long-iso'
-  alias la='eza -la --group-directories-first --icons=auto --time-style=long-iso'
+  alias ls='eza --group-directories-first'
+  alias ll='eza -l  --group-directories-first --time-style=long-iso'
+  alias la='eza -la --group-directories-first --time-style=long-iso'
 fi
 
 # HOMEBREW_GITHUB_API_TOKEN 은 brew 만 읽는다(워크스페이스 전체 확인함).
@@ -198,4 +199,4 @@ fi
 
 # fzf-tab 미리보기. eza 가 없으면 미리보기 창만 비고 완성 자체는 동작한다.
 (( $+commands[eza] )) && \
-  zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always --icons=always $realpath'
+  zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
