@@ -5,7 +5,9 @@ vim.g.maplocalleader = ","
 
 -- 화면
 o.number = true
-o.relativenumber = true
+-- 절대 번호가 기본. LSP 진단·git blame·남이 알려준 "42번 줄" 이 화면과 그대로 맞는다.
+-- d5j 처럼 세어 움직여야 할 때만 <leader>tl 로 상대 번호를 켠다(창 단위).
+o.relativenumber = false
 o.cursorline = true
 o.signcolumn = "yes"
 o.termguicolors = true

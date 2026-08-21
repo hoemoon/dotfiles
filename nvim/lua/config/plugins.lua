@@ -218,7 +218,9 @@ require("gitsigns").setup({
     map("n", "<leader>hb", function()
       gs.blame_line({ full = true })
     end, "이 줄 blame")
-    map("n", "<leader>ht", gs.toggle_current_line_blame, "줄 blame 상시표시 토글")
+    -- 토글은 <leader>t 축으로 모은다(keymaps.lua 참고). h 밑은 hunk 조작만.
+    -- hb = 한 번 띄워 보기 · tb = 계속 켜두기
+    map("n", "<leader>tb", gs.toggle_current_line_blame, "줄 blame 상시표시 토글")
   end,
 })
 
@@ -228,7 +230,7 @@ require("zen-mode").setup({
     width = 88, -- 한 줄에 들어갈 글자 수. 한글 기준 44자 남짓
     options = {
       number = false,
-      relativenumber = true,
+      relativenumber = false,
       cursorline = false,
       signcolumn = "no",
     },
