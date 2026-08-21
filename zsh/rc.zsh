@@ -20,7 +20,10 @@ fi
 unset _antidote
 
 # ── completion ──────────────────────────────────────────────────────
-fpath=(~/.zsh/completions $fpath)
+# ~/.zsh 는 이 기기에 직접 떨군 completion 을 담는다(_swift · _hermes 등
+# Xcode·RN 툴체인이 배포하는 것들). ANTIDOTE_HOME 도 그 아래 plugins/ 다.
+# completions/ 는 앞으로 정리해 넣을 자리 — 없어도 fpath 는 조용히 무시한다.
+fpath=(~/.zsh ~/.zsh/completions $fpath)
 
 # compinit 전체 검사는 ~27ms 로 기동 최대 비용이다. 덤프가 24시간 넘게
 # 묵었을 때만 전체 재생성하고, 평소엔 -C 로 검사를 건너뛴다.
@@ -82,9 +85,47 @@ if [[ -n $GHOSTTY_RESOURCES_DIR ]]; then
   source "$GHOSTTY_RESOURCES_DIR"/shell-integration/zsh/ghostty-integration
 fi
 
-# ── prompt / fzf ────────────────────────────────────────────────────
-# 둘 다 brew 의존이라 위와 같은 이유로 존재할 때만 부른다.
-(( $+commands[starship] )) && eval "$(starship init zsh)"
+# ── 프롬프트 ────────────────────────────────────────────────────────
+# 브랜치와 워크트리 여부만 보여준다. 외부 프로세스를 하나도 부르지 않는다.
+#
+# starship 을 쓰다 걷어냈다. 이유는 비용이다 — 사내 모노레포(추적 11k,
+# 워킹트리 1.4M 파일)에서 프롬프트 한 번이 실측 271ms 였고, 그중 250ms 가
+# git_status 하나였다. `git status` 자체가 그 저장소에서 270ms 다.
+# starship 은 동기식이라 그동안 커서가 안 온다.
+#
+# 비싼 건 브랜치가 아니라 더티 상태다. 브랜치는 .git/HEAD 한 줄이고 zsh 는
+# $(<파일) 로 fork 없이 읽는다 — 같은 저장소에서 0.17ms(약 1,600배).
+# 더티 표시는 일부러 뺐다. 변경 여부는 nvim 의 gitsigns 와 lazygit 이
+# 훨씬 잘 보여주고, 프롬프트에서 중복이다.
+#
+# ⚠ vcs_info(zsh 동봉)는 대안이 아니다. 내장이라 가벼울 것 같지만 내부에서
+#   git 을 여러 번 fork 해서 실측 84ms — `git rev-parse` 단독(27ms)보다 느리다.
+_git_prompt_precmd() {
+  emulate -L zsh
+  _GITPROMPT=''
+  local dir=$PWD gitdir head name
+  while [[ -n $dir ]]; do
+    if [[ -d $dir/.git ]]; then gitdir=$dir/.git; break
+    elif [[ -f $dir/.git ]]; then           # 워크트리는 .git 이 파일이다
+      gitdir=${"$(<$dir/.git)"#gitdir: }; break
+    fi
+    [[ $dir == / ]] && break
+    dir=${dir:h}
+  done
+  [[ -n $gitdir && -r $gitdir/HEAD ]] || return
+  head=${"$(<$gitdir/HEAD)"}
+  if [[ $head == ref:* ]]; then name=${head##*/}; else name="@${head[1,7]}"; fi
+  [[ $gitdir == */worktrees/* ]] && name+=" ⑂"
+  _GITPROMPT=" %F{magenta}${name}%f"
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _git_prompt_precmd
+setopt PROMPT_SUBST
+PROMPT='%F{cyan}%~%f${_GITPROMPT}
+%F{green}❯%f '
+
+# ── fzf ─────────────────────────────────────────────────────────────
+# brew 의존이라 존재할 때만 부른다.
 
 # tty 가 붙은 셸에서만. tty 없는 `zsh -i -c` 에서 fzf 가
 # "can't change option: zle" 를 두 줄 뱉는 걸 막는다.

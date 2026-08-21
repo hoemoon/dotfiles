@@ -13,7 +13,6 @@ brew "python"
 # 플러그인도 프롬프트도 안 뜬다). 플러그인 자체는 antidote 가 첫 실행 때
 # ~/.zsh/plugins 로 클론한다 — brew 로 설치하지 않는다.
 brew "antidote"  # 플러그인 관리 (zsh/zsh_plugins.txt)
-brew "starship"  # 프롬프트 (~/.config/starship.toml — 이 저장소 밖)
 brew "gh"        # zshrc 가 HOMEBREW_GITHUB_API_TOKEN 을 여기서 얻는다(없으면 빈 값)
 
 # ── 에디터 ─────────────────────────────────────────────

@@ -68,9 +68,10 @@ This ordering matters: `ship`, `uia`, and `tiny-press` exist both in
 
 ## Everything external is guarded
 
-antidote, starship, fzf, and eza are each called only when present. On a machine
-where `brew bundle` has not run yet, the shell still starts cleanly — you lose
-plugins, the prompt, and the `ls` aliases, but nothing errors.
+antidote, fzf, and eza are each called only when present. On a machine where
+`brew bundle` has not run yet, the shell still starts cleanly — you lose plugins
+and the `ls` aliases, but nothing errors. The prompt is not in that list: it is
+plain zsh with no external process, so it works on a bare machine.
 
 The antidote path follows `HOMEBREW_PREFIX` (exported by `brew shellenv` in
 `.zprofile`, which runs first), so it resolves on Intel Macs at `/usr/local` too.

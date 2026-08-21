@@ -9,14 +9,12 @@ nvim/          Markdown workbench (Neovim 0.12)
 ghostty/       Terminal
 zsh/           Shell
 git/           Shared git config + global ignore
-starship.toml  Prompt
 Brewfile       Every external tool the above depends on
 ```
 
 Two mechanisms, chosen by whether anything else writes to the file:
 
-- **Symlinked** — `~/.config/nvim`, `~/.config/ghostty`, `~/.config/starship.toml`,
-  `~/.config/git/ignore`. Nothing but this repo touches those, so the repo owns
+- **Symlinked** — `~/.config/nvim`, `~/.config/ghostty`, `~/.config/git/ignore`. Nothing but this repo touches those, so the repo owns
   them outright.
 - **Referenced** — `~/.zshenv`, `~/.zprofile`, `~/.zshrc`, `~/.gitconfig` stay real
   local files that `source` (or `[include]`) the shared version. Installers append

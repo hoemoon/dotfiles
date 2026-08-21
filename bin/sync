@@ -33,7 +33,6 @@ DOTFILES = _bootstrap.DOTFILES
 LINKS = [
     ("nvim", HOME / ".config/nvim"),
     ("ghostty", HOME / ".config/ghostty"),
-    ("starship.toml", HOME / ".config/starship.toml"),
     ("git/ignore", HOME / ".config/git/ignore"),
 ]
 
