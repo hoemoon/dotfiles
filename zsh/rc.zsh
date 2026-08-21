@@ -57,14 +57,26 @@ alias vi="nvim"
 alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 
 # eza. ⚠ eza 의 -t 는 ls 와 달리 "시간 정렬"이 아니라 --time 필드 인자를
-# 요구한다 — `ls -lt` 는 에러가 난다. 그 용도는 아래 lt 별칭을 쓴다.
-# (--git 은 공짜다: 이 모노레포에서 실측 eza 5.8ms / --git 포함 5.7ms.)
+# 요구한다 — `ls -lt` 는 에러가 난다. 시간 정렬은 `ll --sort=newest` 로.
+#
+# ⚠ --git 을 붙이지 않는다. 예전 주석은 "실측 5.8ms / --git 포함 5.7ms" 라며
+#   공짜라고 적고 있었는데, 지금 기준으로 틀렸다. 사내 모노레포(추적 11k,
+#   워킹트리 1.4M 파일)에서 --git 342ms / 없이 13ms — 27배다. 표시할 항목이
+#   5개뿐인 하위 디렉터리에서도 341ms 다. eza 가 항목 수와 무관하게 저장소
+#   전체의 git 상태를 계산하기 때문이고, 프롬프트에서 starship 을 걷어낸 것과
+#   원인이 같다. 변경 여부는 nvim 의 gitsigns 와 lazygit 이 이미 보여준다.
+#
+# --icons 는 반드시 =auto 로 쓴다. 인자 없는 --icons 는 always 와 같아서
+# `ls | grep` 이나 스크립트로 글리프가 그대로 새어나간다. auto 는 tty 가
+# 아니면 자동으로 끈다. 폰트는 Brewfile 의 nerd font cask 가 보장한다.
+#
+# lt·tree 별칭은 두지 않는다. lt 는 --sort=modified 가 ls -lt 와 정렬 방향이
+# 반대였고, tree 는 --level=2 로 조용히 잘려서 "하위에 없다"로 오독된다.
+# 둘 다 진짜 이름을 가리면서 동작만 다른 쪽이라 없는 편이 낫다.
 if (( $+commands[eza] )); then
-  alias ls='eza --group-directories-first --git'
-  alias ll='eza -l  --group-directories-first --git --time-style=long-iso'
-  alias la='eza -la --group-directories-first --git --time-style=long-iso'
-  alias lt='eza -l  --sort=modified --git --time-style=long-iso'  # ls -lt 대용
-  alias tree='eza --tree --level=2 --group-directories-first'
+  alias ls='eza --group-directories-first --icons=auto'
+  alias ll='eza -l  --group-directories-first --icons=auto --time-style=long-iso'
+  alias la='eza -la --group-directories-first --icons=auto --time-style=long-iso'
 fi
 
 # HOMEBREW_GITHUB_API_TOKEN 은 brew 만 읽는다(워크스페이스 전체 확인함).
