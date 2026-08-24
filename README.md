@@ -75,15 +75,29 @@ the Keychain, which only works from a GUI terminal session.
 ~/dotfiles/bin/sync
 ```
 
-Pulls, creates any missing symlinks, and reconciles the Brewfile. Safe to re-run.
-**It never overwrites anything it did not create** — if a real file occupies a
-target path, or a symlink points elsewhere, it warns and moves on, because that is
-a decision for a human. Exits 1 when something needs attention.
+Pulls, creates any missing symlinks, checks the one line that pulls each shared
+file in, and reconciles the Brewfile. Safe to re-run. **It never overwrites
+anything it did not create** — if a real file occupies a target path, or a symlink
+points elsewhere, it warns and moves on, because that is a decision for a human.
+Exits 1 when something needs attention.
 
 This is exactly the gap `git pull` leaves. Because the symlinks point into the
 repository, **edits to existing files take effect from the pull alone.** What a
-pull cannot do is (1) create links for files newly added to the repo and
-(2) install newly declared Brewfile entries. `sync` does those two things.
+pull cannot do is (1) create links for files newly added to the repo, (2) install
+newly declared Brewfile entries, and (3) notice that a *referenced* file does not
+reference anything yet.
+
+(3) is the quiet one, and the only failure here that gives no error at all. A
+machine that had its own `~/.zshrc` or `~/.gitconfig` before it knew about this
+repo keeps using it: the pull succeeds, the shell opens, git works — and none of
+the shared configuration is loaded. So `sync` checks that `source
+~/dotfiles/zsh/rc.zsh` and the `[include]` for `git/shared` are actually there, and
+appends them when they are not, since appending destroys nothing.
+
+Adding that line is not the whole job, though. The old body stays above it, and a
+`~/.zshrc` that still runs its own `antidote load`, `compinit`, or `starship init`
+now does it twice — plugins load in two passes, prompts stack. `sync` lists those
+lines and leaves the deleting to a human.
 
 ## Where to look
 
