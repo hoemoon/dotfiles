@@ -64,7 +64,15 @@ setopt AUTO_CD EXTENDED_GLOB INTERACTIVE_COMMENTS NO_BEEP
 # ── alias ───────────────────────────────────────────────────────────
 alias vim="nvim"
 alias vi="nvim"
-alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+# tailscale CLI 는 데몬 형태에 따라 경로가 갈린다. App Store 앱은 샌드박스라
+# brew CLI 가 그 소켓에 붙지 못하고, 반대로 시스템 데몬(tailscaled)은 앱 번들
+# CLI 로 다루면 안 된다. 그래서 소켓 존재로 판단한다 — 전환·롤백 어느 쪽이든
+# 셸을 고치지 않아도 맞는 쪽을 쓴다. (전환 이유 = workspace/SERVICE.md)
+if [[ -S /var/run/tailscaled.socket ]]; then
+  alias tailscale="/opt/homebrew/bin/tailscale"
+else
+  alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+fi
 
 # eza. ⚠ eza 의 -t 는 ls 와 달리 "시간 정렬"이 아니라 --time 필드 인자를
 # 요구한다 — `ls -lt` 는 에러가 난다. 시간 정렬은 `ll --sort=newest` 로.
