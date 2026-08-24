@@ -117,9 +117,21 @@ def step_pull(ui: UI) -> None:
         before = run(["git", "rev-parse", "HEAD"], cwd=DOTFILES).stdout.strip()
         p = run(["git", "pull", "--ff-only", "--quiet"], cwd=DOTFILES)
         if p.returncode != 0:
-            s.fail("git pull 실패", output=p.stdout,
-                   hint="충돌이나 미커밋 변경을 정리하고 다시 실행할 것\n"
+            # 원인을 구분한다. 실패 대부분은 충돌이지만, 작업용 브랜치에
+            # 올라가 있으면 추적 정보가 없어서 같은 자리에서 멈춘다 —
+            # 그때 "충돌을 정리하라" 는 안내는 엉뚱한 곳을 가리킨다.
+            branch = run(["git", "branch", "--show-current"],
+                         cwd=DOTFILES).stdout.strip()
+            if "no tracking information" in p.stdout:
+                hint = ("브랜치 {!r} 에 추적 정보가 없다 — 여기서 할 일은 없다.\n"
+                        "본 브랜치로 돌아가서:  git switch main && bin/sync\n"
+                        "이 브랜치를 계속 쓸 거면:  "
+                        "git branch --set-upstream-to=origin/{} {}"
+                        .format(branch, branch, branch))
+            else:
+                hint = ("충돌이나 미커밋 변경을 정리하고 다시 실행할 것\n"
                         "cd {} && git status".format(tilde(DOTFILES)))
+            s.fail("git pull 실패", output=p.stdout, hint=hint)
             return
         after = run(["git", "rev-parse", "HEAD"], cwd=DOTFILES).stdout.strip()
         if before == after:
