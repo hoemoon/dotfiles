@@ -18,6 +18,9 @@ vim.pack.add({
   -- ★ 마크다운 인라인 렌더링 — 이 설정의 핵심
   { src = gh("MeanderingProgrammer/render-markdown.nvim") },
 
+  -- ★ Org — 할 일·일정 전용. 마크다운을 대체하지 않는다 (아래 설정 참고)
+  { src = gh("nvim-orgmode/orgmode") },
+
   -- 집중 글쓰기
   { src = gh("folke/zen-mode.nvim") },
 
@@ -91,6 +94,60 @@ require("render-markdown").setup({
   quote = { icon = "▍" },
   pipe_table = { preset = "round" },
   link = { wiki = { icon = "󰌷 ", highlight = "RenderMarkdownWikiLink" } },
+})
+
+-- ------------------------------------------------------------ ★ org
+-- 마크다운을 대체하지 않는다. 역할을 잘라 쓴다:
+--   산문·노트 = 마크다운 (~/workspace/notes · markdown_oxide + render-markdown)
+--   할 일·일정 = org        (~/workspace/org)
+--
+-- org 를 들이는 이유는 문법이 아니라 **agenda 하나**다. 노트 제자리에 남긴
+-- `* TODO` 들이 "오늘 뭘 해야 하나" 한 화면으로 모인다 — 마크다운 체크박스에는
+-- 이걸 모아주는 쪽이 없고, 전용 할일앱은 반대로 태스크를 문맥에서 잘라낸다.
+-- 그래서 노트까지 org 로 옮기지 않는다. quartz(iOS 읽기·TTS)·Obsidian 이
+-- 마크다운 전용이라, 노트를 org 로 옮기면 모바일 읽기 경로가 통째로 끊긴다.
+--
+-- 저장 위치 = ~/workspace/org, 단 **git 추적 제외**(워크스페이스 .gitignore 의 `/org/`).
+-- 워크스페이스 안에 둔 건 노트(notes/)와 같은 자리에서 열고 grep 하기 위해서지
+-- 커밋하기 위해서가 아니다 — 할 일은 상태가 하루에도 여러 번 바뀌어서 추적하면
+-- 커밋 로그가 TODO/DONE 토글로 뒤덮인다. 대가는 명확하다: 머신 간 공유 = git only
+-- 이므로(CLAUDE.md §저장소) **이 파일들은 MacBook 으로 넘어가지 않는다.**
+-- 나중에 공유가 필요해지면 .gitignore 에서 `/org/` 를 빼는 것만으로 켜진다.
+--
+-- treesitter 파서는 orgmode 가 자기 parser/org.so 로 직접 컴파일한다
+-- (첫 실행 때 clang + 네트워크, 실측 ~30초). nvim-treesitter 는 필요 없고
+-- 내장 파서 트리도 건드리지 않는다 → "0.12 에 있는 건 다시 깔지 않는다" 와 무관.
+local ORG = vim.env.HOME .. "/workspace/org"
+
+require("orgmode").setup({
+  org_agenda_files = ORG .. "/**/*",
+  org_default_notes_file = ORG .. "/inbox.org",
+
+  -- render-markdown 은 org 에 붙지 않는다. 그 자리를 내장 옵션으로 메운다.
+  -- (conceallevel=2 · concealcursor="" 는 options.lua 에서 이미 전역으로 잡혀 있다)
+  org_startup_indented = true, -- 본문을 헤드라인 깊이만큼 가상 들여쓰기
+  org_hide_emphasis_markers = true, -- *굵게* 의 별표를 감춘다
+  org_hide_leading_stars = true, -- `*** 제목` 의 앞 별표를 흐리게
+
+  -- 완료 시각을 남긴다 → agenda 에서 "이번 주에 뭘 끝냈나"를 되짚을 수 있다
+  org_log_done = "time",
+
+  -- 접기: 최상위 헤드라인만 펼친 상태로 연다
+  org_startup_folded = "overview",
+
+  -- 캡처(<leader>oc) — 전부 inbox.org 로 떨어뜨리고 나중에 refile(<leader>or) 한다.
+  --   %? 커서 위치 · %u 날짜 · %U 날짜+시각 · %a 캡처한 자리로 돌아오는 링크
+  -- `c` 가 이 설정의 핵심이다: 코드/문서를 보다가 할 일이 생기면 그 자리에서
+  -- 캡처하고, 나중에 agenda 에서 링크(<leader>oo)로 원래 자리로 돌아온다.
+  org_capture_templates = {
+    t = { description = "할 일", template = "* TODO %?\n  %u", target = ORG .. "/inbox.org" },
+    n = { description = "메모", template = "* %?\n  %U", target = ORG .. "/inbox.org" },
+    c = {
+      description = "할 일 (지금 이 자리 링크)",
+      template = "* TODO %?\n  %u\n  %a",
+      target = ORG .. "/inbox.org",
+    },
+  },
 })
 
 -- ------------------------------------------------------------ 포매팅
