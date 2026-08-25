@@ -215,8 +215,8 @@ External dependencies: `fzf` (brew) · `fd` · `rg` · `bat`
 | `<leader>nf` `<leader>ng` | find files · search contents in the notes folder |
 
 Inside the window: `<C-j>`/`<C-k>` move · `<C-u>`/`<C-d>` scroll the preview ·
-`<C-q>` send everything to quickfix · `<C-x>`/`<C-v>`/`<C-t>` open in a
-split/vsplit/tab.
+`<C-q>` send everything to quickfix · `<A-q>` send only the selected ones ·
+`<C-s>`/`<C-v>`/`<C-t>` open in a split/vsplit/tab.
 
 ### flexoki (kepano) / lualine.nvim / nvim-web-devicons
 
@@ -533,17 +533,31 @@ folder. The nvim config is not touched.
 
 | Key | Action |
 |---|---|
-| `<leader>nn` | new note (prompts for a name → `~/workspace/notes/<name>.md`) |
+| `<leader>nn` | new note — prompts for a name, creates it in `notes/inbox/`, and links it from today's daily note |
 | `<leader>nf` / `<leader>ng` | find note files / search note contents |
-| `<leader>nt` / `<leader>ny` | today's / yesterday's daily note |
+| `:Daily [when]` | daily note — **natural-language dates** |
 | typing `[[` | note title completion (built-in completion) |
 | `gd` | follow link |
 | **`grr`** | **backlinks** — notes referencing this one |
-| `gO` | heading outline |
+| `gO` / `gW` | heading outline / vault-wide symbols (notes, headings, tags) |
 
-`<leader>nt` / `<leader>ny` map to `:LspToday` / `:LspYesterday`, which the server
-registers **per buffer**, so they only work in markdown buffers. Open a note first
-if you want them elsewhere.
+`<leader>nn` writes into `inbox/` rather than the vault root on purpose: a note
+saved at the root is picked up by launchd (`com.paju.notes-site`) and published to
+the tailnet wiki immediately, so a draft would leak. It also appends `[[name]]` to
+today's daily note **before** creating the file — an orphan note that nothing links
+to is the most common way this system rots, and a failed creation should still
+leave a trace.
+
+`:Daily` accepts an arbitrary date string (`:Daily next monday` · `+7` ·
+`two days ago`); `:LspToday` / `:LspTomorrow` / `:LspYesterday` are special cases of
+it. All of them are registered **per buffer** by the server, so a note has to be
+open first. From the shell, `zd` covers the same ground (`zd "next monday"` ·
+`zd -7`) — it wraps `markdown-oxide daily` in a subshell pinned to the vault,
+because the binary treats the *current* directory as the vault root and silently
+creates an empty note wherever it is called from otherwise.
+
+> `<leader>nt` / `<leader>ny` were removed in `262e0bc` — they were pure duplicates
+> of `:LspToday` / `:LspYesterday`, which `:Daily` and `zd` now cover more broadly.
 
 > **Backlink caveat**: `grr` finds "links pointing at this file" when the cursor is
 > in the **body**. On a title heading line (`# Title`) it instead finds "references
