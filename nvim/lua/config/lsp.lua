@@ -73,6 +73,32 @@ vim.api.nvim_create_autocmd("LspAttach", {
     if client:supports_method("textDocument/codeLens") then
       vim.lsp.codelens.enable(true, { bufnr = ev.buf })
     end
+
+    -- 접기 — **파서가 없는 파일타입에서만** LSP 로 받는다.
+    --
+    -- :h vim.lsp.foldexpr 의 예시는 foldingRange 를 지원하는 모든 서버에 LSP 를
+    -- 우선하라고 하지만, 그대로 쓰면 이 설정에선 Lua 접기가 죽는다. lua_ls 는
+    -- foldingRangeProvider=true 라고 광고해 놓고 실제로는 범위를 0 개 준다
+    -- (실측 2026-08-25, keymaps.lua 129줄: treesitter 13 개 vs lua_ls 0 개).
+    -- 에러 없이 조용히 사라지는 종류의 퇴행이라 화이트리스트로 좁힌다.
+    -- sourcekit 은 반대로 잘 준다 — 실측 324줄에서 48 개, struct/func/if 중첩까지.
+    local FOLD_VIA_LSP = { swift = true, objc = true, objcpp = true }
+    if FOLD_VIA_LSP[vim.bo[ev.buf].filetype] and client:supports_method("textDocument/foldingRange") then
+      -- [win][0] = "이 창에서 이 버퍼일 때만". 그냥 vim.wo 면 같은 창에 연
+      -- 다음 파일에도 남는다.
+      local win = vim.api.nvim_get_current_win()
+      -- foldmethod 도 같이 되돌린다. after/ftplugin/swift.lua 가 LSP 부착
+      -- **전에** foldmethod=indent 폴백을 걸어두므로, foldexpr 만 바꾸면
+      -- 그 식이 아예 평가되지 않는다(실측으로 밟았다 — 들여쓰기 fold 가
+      -- LSP fold 인 척 보였다).
+      vim.wo[win][0].foldmethod = "expr"
+      vim.wo[win][0].foldexpr = "v:lua.vim.lsp.foldexpr()"
+      -- foldtext 는 건드리지 않는다. vim.lsp.foldtext() 는 서버가 준
+      -- collapsedText 를 보여주는 게 값어치인데 sourcekit 은 그걸 안 준다
+      -- (실측: 48 개 범위 전부 collapsedText 없음). 그러면 "첫 줄 표시"로
+      -- 폴백하는데, 내용은 options.lua 의 foldtext="" 와 같으면서 문법
+      -- 강조만 잃는다 — 순손실이다.
+    end
   end,
 })
 

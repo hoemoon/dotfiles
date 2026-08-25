@@ -54,6 +54,16 @@ o.updatetime = 250
 o.conceallevel = 2
 o.concealcursor = "" -- 커서가 있는 줄은 원문 노출 → 편집 가능
 
+-- 접기. 동봉 treesitter fold 쿼리를 그대로 쓴다 — 아래 하이라이팅과 같은 파서다.
+--   markdown/folds.scm  fenced_code_block · section · list_item
+--   lua/folds.scm       function · if · for · table_constructor
+-- 파서가 없는 파일타입은 foldexpr 이 0 을 돌려줘 fold 가 안 생긴다(무해하지만
+-- 줄마다 평가는 한다). Swift 는 파서가 없어 LSP 로 따로 받는다 — lsp.lua 참고.
+o.foldmethod = "expr"
+o.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+o.foldlevel = 99 -- ★ 다 펴놓고 시작. 0 이면 파일이 통째로 접힌 채 열린다
+o.foldtext = "" -- 빈 문자열 = 접힌 줄을 문법 강조 그대로 표시(0.10+)
+
 -- 0.12 내장 treesitter 파서로 하이라이팅.
 -- markdown / markdown_inline / lua / vim / vimdoc / query / c 는 nvim 에 동봉돼 있어
 -- nvim-treesitter 플러그인이 전혀 필요 없다.

@@ -19,3 +19,9 @@ vim.bo.commentstring = "// %s"
 
 -- 산문용으로 켜둔 conceal 은 코드에서 글자를 지워버릴 수 있다.
 vim.wo.conceallevel = 0
+
+-- 접기 폴백. Swift 접기는 sourcekit-lsp 의 foldingRange 에 얹혀 있는데
+-- (동봉 treesitter 파서에 swift 가 없다), buildServer.json/Package.swift 를
+-- 못 찾으면 서버가 아예 안 붙어 fold 가 0 이 된다. 그때는 들여쓰기로 접는다.
+-- LSP 가 붙으면 lsp.lua 의 LspAttach 가 이 창-버퍼의 foldexpr 을 덮어쓴다.
+vim.wo.foldmethod = "indent"

@@ -35,6 +35,12 @@ map("n", "<leader>ti", function()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
 end, { desc = "인레이 힌트" })
 
+-- 본문을 접어 뼈대만 본다. 마크다운은 section 안의 코드블록이, Swift 는 함수
+-- 본문이 이 깊이에서 접힌다. foldlevel 은 창-로컬이라 분할 창마다 따로 논다.
+map("n", "<leader>tf", function()
+  vim.wo.foldlevel = vim.wo.foldlevel > 2 and 2 or 99
+end, { desc = "코드 블록 접기 토글" })
+
 -- ----------------------------------------------------------- 찾기
 local t = require("fzf-lua")
 map("n", "<leader>ff", t.files, { desc = "파일 찾기" })
