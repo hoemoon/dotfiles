@@ -61,3 +61,5 @@ window-padding-y = 8
 
 macos-option-as-alt = left
 
+# 비활성 split pane 어둡게 처리 끄기 (기본 0.7)
+unfocused-split-opacity = 1
