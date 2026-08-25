@@ -62,7 +62,16 @@ o.concealcursor = "" -- 커서가 있는 줄은 원문 노출 → 편집 가능
 o.foldmethod = "expr"
 o.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 o.foldlevel = 99 -- ★ 다 펴놓고 시작. 0 이면 파일이 통째로 접힌 채 열린다
+-- foldlevel 은 창-로컬이라 <leader>tf 로 접어둔 창에 다음 파일을 열면 그 파일도
+-- 접힌 채로 뜬다. foldlevelstart 는 버퍼를 새로 열 때마다 값을 되돌려 그걸 막는다
+-- (기본 -1 = "지금 값 유지").
+o.foldlevelstart = 99
 o.foldtext = "" -- 빈 문자열 = 접힌 줄을 문법 강조 그대로 표시(0.10+)
+-- 접을 수 있는 곳을 여백에 표시한다. "auto" 라 fold 가 없는 파일엔 여백이 아예
+-- 안 생긴다. mouse=a 와 맞물려 여백 클릭으로도 여닫힌다(:h fold "The mouse can
+-- also be used…"). 다른 에디터의 ▾/▸ 화살표에 해당하는 자리다 — 이게 없으면
+-- 어디가 접히는지 zc 를 눌러봐야 안다.
+o.foldcolumn = "auto:3"
 
 -- 0.12 내장 treesitter 파서로 하이라이팅.
 -- markdown / markdown_inline / lua / vim / vimdoc / query / c 는 nvim 에 동봉돼 있어

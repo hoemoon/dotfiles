@@ -35,11 +35,17 @@ map("n", "<leader>ti", function()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
 end, { desc = "인레이 힌트" })
 
--- 본문을 접어 뼈대만 본다. 마크다운은 section 안의 코드블록이, Swift 는 함수
--- 본문이 이 깊이에서 접힌다. foldlevel 은 창-로컬이라 분할 창마다 따로 논다.
+-- 개요 보기 — 최상위 구조만 남기고 접는다. 마크다운은 `##` 절 목록, Swift 는
+-- 함수 시그니처 목록이 된다. foldlevel 은 창-로컬이라 분할 창마다 따로 논다.
+--
+-- 목표가 2 가 아니라 1 인 이유가 둘 있다. ① 레벨 1 이 양쪽 다 "개요"에 맞는다
+-- (2 는 마크다운=코드블록 · Swift=함수 안 블록이라 훑기용이 아니다). ② 마크다운
+-- 레벨 2 는 실제로 못 쓴다 — render-markdown 이 ``` 펜스를 conceal 해서 접힌
+-- 코드블록이 **빈 줄**로 보이고 여백의 + 마커도 안 뜬다(실측). 코드블록을 접고
+-- 싶으면 <leader>tr 로 렌더를 끈 뒤 :set foldlevel=2 를 쓴다.
 map("n", "<leader>tf", function()
-  vim.wo.foldlevel = vim.wo.foldlevel > 2 and 2 or 99
-end, { desc = "코드 블록 접기 토글" })
+  vim.wo.foldlevel = vim.wo.foldlevel > 1 and 1 or 99
+end, { desc = "개요 보기 (접기 토글)" })
 
 -- ----------------------------------------------------------- 찾기
 local t = require("fzf-lua")
