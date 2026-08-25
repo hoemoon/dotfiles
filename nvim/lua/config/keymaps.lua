@@ -51,41 +51,68 @@ map("n", "<leader>/", t.blines, { desc = "이 문서 안에서 찾기" })
 
 -- ------------------------------------------------------------- 노트
 -- [[링크]] 완성 · 백링크 · 데일리 노트는 markdown_oxide LSP 가 제공한다.
--- 여기 있는 건 "노트 폴더로 가는 길" 뿐이다.
+-- 여기 남긴 셋은 **코어에도 LSP 에도 대응물이 없는 것**뿐이다 — 찾기·검색·만들기.
 --
--- ★ 노트 워크플로를 잠시 꺼둔다 (2026-08-21). true 로 되돌리면 그대로 살아난다.
---   끄면 <leader>n* 다섯 자리가 통째로 빈다.
-local NOTES_ENABLED = false
+-- 2026-08-21 에 <leader>n* 다섯을 통째로 껐다가, 그날의 기준("코어가 이미
+-- 하는 걸 중복 정의하지 않는다")을 끝까지 적용해 셋만 되살린다.
+--   · nt/ny 는 버렸다 — :LspToday 의 순수한 중복이고, 지금은 :Daily(자연어)와
+--     셸의 zd 가 더 넓게 덮는다.
+--   · nf/ng 는 중복이 아니다. <leader>ff·fg 는 cwd 기준이라 노트에 닿지 않고,
+--     gW(워크스페이스 심볼)는 markdown_oxide 가 붙은 버퍼에서만 동작한다
+--     (workspace_required). 노트 저장소 **밖에서 안으로 들어가는 유일한 문**이다.
+local NOTES = vim.env.HOME .. "/workspace/notes"
 
-if NOTES_ENABLED then
-  -- 노트 루트는 .moxide.toml 로 표시돼 있어 LSP 는 경로를 몰라도 되지만,
-  -- 검색은 시작 지점이 필요해서 이 상수 하나만 둔다.
-  local NOTES = vim.env.HOME .. "/workspace/notes"
+map("n", "<leader>nf", function()
+  t.files({ cwd = NOTES, winopts = { title = " 노트 파일 " } })
+end, { desc = "노트 파일 찾기" })
 
-  map("n", "<leader>nf", function()
-    t.files({ cwd = NOTES, winopts = { title = " 노트 파일 " } })
-  end, { desc = "노트 파일 찾기" })
+map("n", "<leader>ng", function()
+  t.live_grep({ cwd = NOTES, winopts = { title = " 노트 검색 " } })
+end, { desc = "노트 내용 검색" })
 
-  map("n", "<leader>ng", function()
-    t.live_grep({ cwd = NOTES, winopts = { title = " 노트 검색 " } })
-  end, { desc = "노트 내용 검색" })
+-- 새 노트 — inbox 에 만들고, 오늘 데일리 노트에 [[이름]] 을 걸어 둔다.
+--
+-- inbox 인 이유 = .moxide.toml 의 new_file_folder_path 와 같은 규칙이다.
+-- 루트에 만들면 저장하는 순간 launchd(com.paju.notes-site)가 감지해서 초안이
+-- tailnet 위키(:8110)로 발행된다. gra 코드 액션은 이미 inbox 로 보내고 있어서,
+-- 여기만 루트로 두면 같은 구멍이 옆에 하나 더 열린 셈이 된다.
+--
+-- 데일리에 먼저 거는 이유 = 고아 노트 방지. inbox 에 쌓이는데 아무 데서도
+-- 도달할 수 없는 노트가 이 방식이 죽는 가장 흔한 경로다. 하루치 데일리가 그날
+-- 만든 노트의 목차가 되면 grr·코드 렌즈가 셀 것이 생긴다. 파일보다 링크를
+-- **먼저** 쓴다 — 생성이 실패해도 흔적은 남는 쪽이 낫다.
+-- (이 설정에서 유일하게 다른 파일을 조용히 건드리는 동작이다. 거슬리면 아래
+--  `if fresh then ... end` 블록만 지우면 나머지는 그대로 돈다.)
+map("n", "<leader>nn", function()
+  vim.ui.input({ prompt = "새 노트: " }, function(name)
+    if not name or vim.trim(name) == "" then
+      return
+    end
+    name = vim.trim(name):gsub("[/:]", "-")
+    local path = ("%s/inbox/%s.md"):format(NOTES, name)
+    -- 이미 있는 노트를 다시 열 때는 링크를 또 달지 않는다
+    local fresh = vim.fn.filereadable(path) == 0
 
-  -- 새 노트: 이름만 받고 연다. 첫 저장 전까지 파일은 만들어지지 않는다.
-  map("n", "<leader>nn", function()
-    vim.ui.input({ prompt = "새 노트: " }, function(name)
-      if not name or vim.trim(name) == "" then
-        return
+    if fresh then
+      local daily = ("%s/daily/%s.md"):format(NOTES, os.date("%Y-%m-%d"))
+      vim.fn.mkdir(vim.fs.dirname(daily), "p")
+      local lines = vim.fn.filereadable(daily) == 1 and vim.fn.readfile(daily) or {}
+      if #lines == 0 then
+        lines = { "# " .. os.date("%Y-%m-%d"), "" }
       end
-      name = vim.trim(name):gsub("[/:]", "-")
-      vim.cmd.edit(vim.fn.fnameescape(NOTES .. "/" .. name .. ".md"))
-    end)
-  end, { desc = "새 노트" })
+      table.insert(lines, ("[[%s]]"):format(name))
+      vim.fn.writefile(lines, daily)
+    end
 
-  -- 데일리 노트 — markdown_oxide 가 버퍼에 등록하는 명령이라
-  -- 마크다운 버퍼에서만 동작한다. 아무 데서나 쓰려면 노트를 먼저 연다.
-  map("n", "<leader>nt", "<cmd>LspToday<CR>", { desc = "오늘 노트" })
-  map("n", "<leader>ny", "<cmd>LspYesterday<CR>", { desc = "어제 노트" })
-end
+    vim.fn.mkdir(vim.fs.dirname(path), "p")
+    vim.cmd.edit(vim.fn.fnameescape(path))
+    if fresh then
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# " .. name, "" })
+      vim.cmd("normal! G")
+      vim.cmd.startinsert()
+    end
+  end)
+end, { desc = "새 노트" })
 
 -- --------------------------------------------------------- 글쓰기
 map("n", "<leader>z", "<cmd>ZenMode<CR>", { desc = "집중 모드" })
