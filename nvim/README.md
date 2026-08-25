@@ -5,7 +5,7 @@ Rebuilt from scratch on 2026-08-08 after re-evaluating the ecosystem.
 
 - **Neovim**: 0.12.4 (Homebrew)
 - **Plugins**: 9, managed by the built-in `vim.pack`
-- **Startup**: ~31 ms (no lazy loading — everything loads immediately)
+- **Startup**: ~38 ms (no lazy loading — everything loads immediately)
 
 ```
 ~/.config/nvim/
@@ -277,12 +277,24 @@ browsing is needed, fzf-lua already has git pickers.
 Inline blame is off by default: editing a paragraph of prose marks the whole line,
 which is noisy.
 
-### zen-mode.nvim
+### orgmode
 
-`392K` · folke · [repo](https://github.com/folke/zen-mode.nvim)
+nvim-orgmode · [repo](https://github.com/nvim-orgmode/orgmode)
 
-`<leader>z` — centers the text at 88 columns and hides the UI. For long-form
-writing.
+Tasks and scheduling only — **it does not replace markdown.** Prose and notes stay
+in `~/workspace/notes`; the org store is `~/workspace/org`, deliberately untracked.
+The reason for adding it is the **agenda**, not the syntax: `* TODO` lines left in
+place across files gather into one "what's due" view, which markdown checkboxes
+have no equivalent for. Usage and the decisions behind it live in the workspace's
+`ORG.md`.
+
+- `<leader>oa` agenda · `<leader>oc` capture · `g?` for everything else
+- It compiles its own `parser/org.so` on first run (clang, ~30 s measured), so
+  `nvim-treesitter` is not involved and the bundled parser tree is untouched
+- Folding for Swift/ObjC rides on sourcekit-lsp, but org buffers fold themselves;
+  see `'foldmethod'` notes in `lua/config/options.lua`
+- It also starts an in-process LSP (`vim.lsp.enable("org")`), so completion arrives
+  through the same `LspAttach` path as every other server
 
 ---
 

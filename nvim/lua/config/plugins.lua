@@ -21,9 +21,6 @@ vim.pack.add({
   -- ★ Org — 할 일·일정 전용. 마크다운을 대체하지 않는다 (아래 설정 참고)
   { src = gh("nvim-orgmode/orgmode") },
 
-  -- 집중 글쓰기
-  { src = gh("folke/zen-mode.nvim") },
-
   -- 포매팅
   { src = gh("stevearc/conform.nvim") },
 
@@ -279,20 +276,4 @@ require("gitsigns").setup({
     -- hb = 한 번 띄워 보기 · tb = 계속 켜두기
     map("n", "<leader>tb", gs.toggle_current_line_blame, "줄 blame 상시표시 토글")
   end,
-})
-
--- ------------------------------------------------------- 집중 글쓰기
-require("zen-mode").setup({
-  window = {
-    width = 88, -- 한 줄에 들어갈 글자 수. 한글 기준 44자 남짓
-    options = {
-      number = false,
-      relativenumber = false,
-      cursorline = false,
-      signcolumn = "no",
-    },
-  },
-  plugins = {
-    options = { laststatus = 0 },
-  },
 })

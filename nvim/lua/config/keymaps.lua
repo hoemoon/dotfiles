@@ -127,7 +127,6 @@ map("n", "<leader>nn", function()
 end, { desc = "새 노트" })
 
 -- --------------------------------------------------------- 글쓰기
-map("n", "<leader>z", "<cmd>ZenMode<CR>", { desc = "집중 모드" })
 map("n", "<leader>cf", function()
   require("conform").format({ async = true, lsp_format = "fallback" })
 end, { desc = "포맷" })
