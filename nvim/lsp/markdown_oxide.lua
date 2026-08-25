@@ -46,5 +46,14 @@ return {
         jump(client, bufnr, cmd)
       end, { desc = ("%s 데일리 노트 열기"):format(cmd) })
     end
+
+    -- ★ :Daily — 서버의 jump 는 위 3개가 아니라 **임의 날짜 문자열**을 받는다
+    -- (fuzzydate). 위 세 명령은 그 특수 케이스일 뿐이라 여기서 열어 준다.
+    --   :Daily                :Daily two days ago    :Daily next monday
+    --   :Daily last friday    :Daily +7 / -7         :Daily prev / next
+    -- 셸에서는 `zd` (dotfiles/zsh/rc.zsh) — cwd 를 볼트로 고정해서 부른다.
+    vim.api.nvim_buf_create_user_command(bufnr, "Daily", function(opts)
+      jump(client, bufnr, opts.args ~= "" and opts.args or "today")
+    end, { nargs = "*", desc = "데일리 노트 — 자연어 날짜 (:Daily next monday)" })
   end,
 }

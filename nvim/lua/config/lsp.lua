@@ -51,9 +51,27 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.bo[ev.buf].complete = ".^5,w^5,b^5,o"
     end
 
-    -- Lua 작성 중엔 인레이 힌트가 유용, 산문에선 방해
-    if client:supports_method("textDocument/inlayHint") and vim.bo[ev.buf].filetype == "lua" then
-      vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+    -- 인레이 힌트. Lua = 타입 힌트. 마크다운 = **블록 트랜스클루전** —
+    -- markdown_oxide 가 `![[링크]]` 자리에 그 블록의 실제 내용을 펼쳐 준다
+    -- (서버 설정 block_transclusion, 기본 on). 예전엔 이 조건이 lua 로만
+    -- 좁혀져 있어서 마크다운에선 한 번도 뜬 적이 없었다. 산문에서 시끄러우면
+    -- .moxide.toml 에 block_transclusion_length = "Partial" 을 준다.
+    if client:supports_method("textDocument/inlayHint") then
+      local ft = vim.bo[ev.buf].filetype
+      if ft == "lua" or ft == "markdown" then
+        vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+      end
+    end
+
+    -- 코드 렌즈. markdown_oxide 는 파일 제목 위에 "N references to file", 헤딩
+    -- 마다 "N references" 를 띄운다 — 볼트에서 무엇이 실제로 중심인지가 편집
+    -- 중에 그대로 보인다.
+    --
+    -- 갱신 autocmd 를 직접 걸지 않는다. 0.12 의 codelens.enable 은 inlay hint
+    -- 와 같은 _capability 기구를 타서 문서 변경마다 알아서 다시 받아온다.
+    -- (예전 관례인 codelens.refresh({bufnr=…}) 는 0.13 에서 없어진다.)
+    if client:supports_method("textDocument/codeLens") then
+      vim.lsp.codelens.enable(true, { bufnr = ev.buf })
     end
   end,
 })

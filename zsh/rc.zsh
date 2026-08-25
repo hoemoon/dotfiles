@@ -64,6 +64,15 @@ setopt AUTO_CD EXTENDED_GLOB INTERACTIVE_COMMENTS NO_BEEP
 # ── alias ───────────────────────────────────────────────────────────
 alias vim="nvim"
 alias vi="nvim"
+
+# 데일리 노트. `markdown-oxide daily` 는 **cwd 를 볼트 루트로 삼는다** — 볼트
+# 밖에서 부르면 .moxide.toml 을 못 읽어 기본값(daily_notes_folder="")으로
+# 떨어지고 그 자리에 빈 노트를 만든다. 실제로 ~/workspace/org/ 에 0 바이트
+# 데일리 노트가 하나 생겼었다(볼트 밖이라 인덱스에도 안 잡히고, org/ 는
+# gitignore 라 다른 머신으로도 안 간다 = 어디서도 도달 못 하는 파일).
+# 서브셸로 감싸 cwd 를 고정한다. 인자는 자연어: zd "next monday" · zd -7
+zd() { (cd ~/workspace/notes && markdown-oxide daily "$@") }
+
 # tailscale CLI 는 데몬 형태에 따라 경로가 갈린다. App Store 앱은 샌드박스라
 # brew CLI 가 그 소켓에 붙지 못하고, 반대로 시스템 데몬(tailscaled)은 앱 번들
 # CLI 로 다루면 안 된다. 그래서 소켓 존재로 판단한다 — 전환·롤백 어느 쪽이든

@@ -22,12 +22,18 @@ map("x", "K", ":m '<-2<CR>gv=gv", { desc = "선택 영역 위로", silent = true
 -- <leader>tb 로 두었다(정의는 plugins.lua 의 on_attach — 버퍼 로컬이라 옮길 수 없다).
 --
 -- 산문(마크다운)과 코드를 같은 설정으로 쓰다 보니 conceallevel · wrap ·
--- 진단 virtual_text · inlay hint 가 앞으로 이 축에 붙을 후보다.
+-- 진단 virtual_text 가 앞으로 이 축에 붙을 후보다.
 
 -- 절대 번호가 기본(options.lua). 세어 움직여야 할 때만 상대로 뒤집는다.
 map("n", "<leader>tl", function()
   vim.wo.relativenumber = not vim.wo.relativenumber
 end, { desc = "상대/절대 줄 번호" })
+
+-- 인레이 힌트. 마크다운에선 `![[링크]]` 임베드의 내용이 제자리에 펼쳐진다
+-- (markdown_oxide 의 block_transclusion). 원문만 보고 싶을 때 끈다.
+map("n", "<leader>ti", function()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
+end, { desc = "인레이 힌트" })
 
 -- ----------------------------------------------------------- 찾기
 local t = require("fzf-lua")
